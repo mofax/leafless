@@ -1,0 +1,27 @@
+{
+  "name": "leafless",
+  "version": "0.0.0",
+  "description": "leafless node.js http library running on generators",
+  "main": "src/leafless.js",
+  "scripts": {
+    "test": "mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mofax/leafless.git"
+  },
+  "keywords": [],
+  "author": "Alloys Mila <mila.alloys@gmail.com>",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/mofax/leafless/issues"
+  },
+  "homepage": "https://github.com/mofax/leafless#readme",
+  "dependencies": {
+    "http-hash": "2.0.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3"
+  }
+}
