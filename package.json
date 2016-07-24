@@ -1,7 +1,7 @@
 {
   "name": "leafless",
   "version": "0.0.0",
-  "description": "leafless node.js http library running on generators",
+  "description": "Just Another Simple Web Library",
   "main": "src/leafless.js",
   "scripts": {
     "test": "mocha --reporter spec"
