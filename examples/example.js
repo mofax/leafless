@@ -4,8 +4,10 @@ let ll = require('../src/leafless');
 
 let app = new ll();
 
+const PORT = 3001;
 
-app.listen(3000);
+console.log(`example listening on port ${PORT}`);
+app.listen(PORT);
 
 app.route('/', class HomeHandler {
     *get(ctx) {

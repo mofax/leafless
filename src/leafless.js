@@ -55,10 +55,10 @@ module.exports = class LeafLess {
 
         let call = handler[method].call(null, ctxObject); // expecting call to be an iterable
 
-        this.dealWithMethodIterator(call, response, handler);
+        this.dealWithMethodIterator(call, response, handler, ctxObject);
     }
 
-    dealWithMethodIterator(iter, response, handler, passIn) {
+    dealWithMethodIterator(iter, response, handler, ctx, passIn) {
         if (typeof (iter.next) !== 'function') {
             throw new Error('expecting method handler to return an iterator');
         }
@@ -71,10 +71,12 @@ module.exports = class LeafLess {
 
         if ((ite.value instanceof Promise)) {
             ite.value.then(res => {
-                this.dealWithMethodIterator(iter, response, handler, res);
+                this.dealWithMethodIterator(iter, response, handler, ctx, res);
             }).catch(err => {
-                this.dealWithMethodIterator(handler.catch(err), response, handler);
+                iter.throw(err);
             });
+        } else {
+            this.dealWithMethodIterator(iter, response, handler, ctx, ite.value);
         }
     }
 
@@ -85,7 +87,7 @@ module.exports = class LeafLess {
         let routed = routing.hash.get(pathname);
 
         if (routed.handler === null) {
-            throw new Error('handler not found');
+            throw new Error('handler not found, TODO: should be a 404');
             // return void 0;
         }
 
@@ -163,6 +165,9 @@ module.exports = class LeafLess {
 
     /**
      * route - set handlers of the given paths
+     * 
+     * @param {string} path - the url path being routed
+     * @param {Object} handler - the route handler
      */
     route(path, handler) {
         if (typeof (path) === 'string') {
