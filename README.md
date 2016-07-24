@@ -4,6 +4,9 @@ LeafLess is a lite Web Framework, with built in generator coroutines for easy as
 ### Installation
 `npm install --save leafless`
 
+### Stability
+Still unstable, very unstable.
+
 ### Quick Usage
 ```javascript
 // require leafless
