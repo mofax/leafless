@@ -5,12 +5,13 @@ const url = require('url');
 const crypto = require('crypto');
 
 const routing = require('./routing');
+const tools = require('./tools');
 
 let server = null;
 
 module.exports = class LeafLess {
     constructor() {
-        this.instanceID = crypto.randomBytes(20).toString('hex');
+        this.instanceID = crypto.randomBytes(5).toString('hex');
     }
 
     handle(request, response, routed, url) {
@@ -24,7 +25,7 @@ module.exports = class LeafLess {
 
         if (typeof (handler[method]) !== 'function') {
             // method not supported
-            this.emit('HTTP404');
+            tools.httpError(405, request, response);
             return void 0;
         }
 
@@ -84,11 +85,11 @@ module.exports = class LeafLess {
         let reqUrl = `http://${request.headers.host}${request.url}`;
         let parseUrl = url.parse(reqUrl, true);
         let pathname = parseUrl.pathname;
-        let routed = routing.hash.get(pathname);
+        let routed = routing.get(pathname);
 
         if (routed.handler === null) {
-            throw new Error('handler not found, TODO: should be a 404');
-            // return void 0;
+            tools.httpError(404, request, response);
+            return void 0;
         }
 
         this.handle(request, response, routed, parseUrl);
@@ -175,10 +176,12 @@ module.exports = class LeafLess {
                 throw new Error(`route is expecting handler to be a function found ${typeof (handler)}`);
             }
 
-            routing.hash.set(path, handler);
+            routing.set(path, handler);
             return;
         }
 
+        // if the first argument is an object
+        // treat it like a key-value structure of path->handler
         if (typeof (path) === 'object') {
             for (let key of path) {
                 if (path.hasOwnProperty(key)) {

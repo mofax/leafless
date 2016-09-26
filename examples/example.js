@@ -1,3 +1,5 @@
+#! env node
+
 'use strict';
 
 let ll = require('../src/leafless');
@@ -17,8 +19,7 @@ app.route('/', class HomeHandler {
 });
 
 app.route('/:tool/:path', class ToolHandler {
-    *get(ctx) {
-        console.log(ctx);
+    *post(ctx) {
         return ctx.params;
     }
 });
