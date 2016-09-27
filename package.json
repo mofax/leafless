@@ -1,6 +1,6 @@
 {
   "name": "leafless",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Just Another Simple Web Library",
   "main": "src/leafless.js",
   "scripts": {
@@ -17,8 +17,7 @@
     "url": "https://github.com/mofax/leafless/issues"
   },
   "homepage": "https://github.com/mofax/leafless#readme",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "chai": "^3.5.0",
     "eslint": "^3.6.0",
