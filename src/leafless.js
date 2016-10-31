@@ -6,6 +6,7 @@ const crypto = require('crypto');
 
 const routing = require('./routing');
 const tools = require('./tools');
+const parseHeader = require('./parse-http-header');
 
 let server = null;
 
@@ -97,7 +98,7 @@ module.exports = class LeafLess {
 
     /**
      * readHTTPBody - read the body of the http request
-     * 
+     *
      * @param {Object} request - The request object from which we are reading the body
      */
     readHTTPBody(request) {
@@ -114,9 +115,9 @@ module.exports = class LeafLess {
                     return;
                 }
 
-                let contentType = request.headers['content-type'];
+                let contentType = parseHeader(request.headers['content-type']);
 
-                if (contentType === 'application/json') {
+                if (contentType.type === 'application/json') {
                     let content = null;
                     try {
                         content = JSON.parse(buf.toString());
@@ -132,7 +133,7 @@ module.exports = class LeafLess {
 
     /**
      * sendResponse - send back an http response to the client
-     * 
+     *
      * @param {any} value - the item being sent back as response
      * @param {Object} response - HTTPResponse object to which we are writing
      */
@@ -166,7 +167,7 @@ module.exports = class LeafLess {
 
     /**
      * route - set handlers of the given paths
-     * 
+     *
      * @param {string} path - the url path being routed
      * @param {Object} handler - the route handler
      */
