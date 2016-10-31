@@ -54,7 +54,7 @@ module.exports = {
 
         // Stylistic Issues
         "array-bracket-spacing": [2, "never"], // enforce spacing inside array brackets (off by default)
-        "indent": [2, 4, { SwitchCase: 1 }],     // this option sets a specific tab width for your code (off by default)
+        "indent": [2, 2, { SwitchCase: 1 }],     // this option sets a specific tab width for your code (off by default)
         "no-array-constructor": 2,             // disallow use of the Array constructor
         "no-mixed-spaces-and-tabs": 2,         // disallow mixed spaces and tabs for indentation
         "no-new-object": 2,                    // disallow use of the Object constructor
