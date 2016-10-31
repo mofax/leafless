@@ -56,6 +56,6 @@ function parseHttpHeader (string) {
 exports.contentType = function parseContentType (string) { 
   return {
     type: parseHttpHeader(string)[0],
-    charset: parseHttpHeader(string)['charset'];
-  }
-}
+    charset: parseHttpHeader(string)['charset']
+  };
+};
