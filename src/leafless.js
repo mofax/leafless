@@ -117,7 +117,7 @@ module.exports = class LeafLess {
 
         let contentType = parseHeader.contentType(request.headers['content-type']);
 
-        if (contentType.type === 'application/json') {
+        if (contentType.type === 'application/json'  || 'application/json;charset=utf-8') {
           let content = null;
           try {
             content = JSON.parse(buf.toString());
