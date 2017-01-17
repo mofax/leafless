@@ -1,12 +1,15 @@
 'use strict';
 
 const http = require('http');
+const fs = require('fs');
 const url = require('url');
 const crypto = require('crypto');
+let path = require('path');
 
+const mime = require('./mime');
+const contentType = require('./content-type');
 const routing = require('./routing');
 const tools = require('./tools');
-const parseHeader = require('./parse-http-header');
 
 let server = null;
 
@@ -26,12 +29,14 @@ module.exports = class LeafLess {
 
     if (typeof (handler[method]) !== 'function') {
       // method not supported
+      console.log(method);
       tools.httpError(405, request, response);
       return void 0;
     }
 
     let ctxObject = {
       href: url.href,
+      pathname: url.pathname,
       params: routed.params,
       query: url.query,
 
@@ -55,17 +60,23 @@ module.exports = class LeafLess {
       }
     };
 
-    let call = handler[method].call(null, ctxObject); // expecting call to be an iterable
+    let call = handler[method].call(handler, ctxObject); // expecting call to be from a generator function
 
     this.dealWithMethodIterator(call, response, handler, ctxObject);
   }
 
-  dealWithMethodIterator(iter, response, handler, ctx, passIn) {
+  dealWithMethodIterator(iter, response, handler, ctx, passIn = {}) {
     if (typeof (iter.next) !== 'function') {
       throw new Error('expecting method handler to return an iterator');
     }
 
-    let ite = iter.next(passIn);
+    let ite;
+    if (('done' in passIn) && ('value' in passIn)) {
+      ite = passIn;
+    } else {
+      ite = iter.next(passIn);
+    }
+
     if (ite.done === true) {
       this.sendResponse(ite.value, response);
       return;
@@ -75,7 +86,8 @@ module.exports = class LeafLess {
       ite.value.then(res => {
         this.dealWithMethodIterator(iter, response, handler, ctx, res);
       }).catch(err => {
-        iter.throw(err);
+        let errorResponse = iter.throw(err);
+        this.dealWithMethodIterator(iter, response, handler, ctx, errorResponse);
       });
     } else {
       this.dealWithMethodIterator(iter, response, handler, ctx, ite.value);
@@ -97,7 +109,7 @@ module.exports = class LeafLess {
   }
 
   /**
-   * readHTTPBody - read the body of the http request
+   * read the body of the http request
    *
    * @param {Object} request - The request object from which we are reading the body
    */
@@ -115,9 +127,9 @@ module.exports = class LeafLess {
           return;
         }
 
-        let contentType = parseHeader.contentType(request.headers['content-type']);
+        let contentType = contentType.parse(request.headers['content-type']);
 
-        if (contentType.type === 'application/json'  || 'application/json;charset=utf-8') {
+        if (contentType.type === 'application/json') {
           let content = null;
           try {
             content = JSON.parse(buf.toString());
@@ -132,13 +144,13 @@ module.exports = class LeafLess {
   }
 
   /**
-   * sendResponse - send back an http response to the client
+   * send back an http response to the client
    *
    * @param {any} value - the item being sent back as response
    * @param {Object} response - HTTPResponse object to which we are writing
    */
   sendResponse(value, response) {
-    if (value === undefined || value === null) {
+    if (value == undefined) {
       response.end();
       return;
     }
@@ -166,8 +178,12 @@ module.exports = class LeafLess {
   }
 
   /**
-   * route - set handlers of the given paths
-   *
+   * set handlers of the given paths
+   *app.route('/:tool/:path', class ToolHandler {
+  *post(ctx) {
+    return ctx.params;
+  }
+});
    * @param {string} path - the url path being routed
    * @param {Object} handler - the route handler
    */
@@ -190,6 +206,66 @@ module.exports = class LeafLess {
         }
       }
     }
+  }
+
+  /**
+   * support serving static files
+   * 
+   * @param {string} path the url root to which to server static requests
+   * @param {string} directory the directory from which to server static files
+   * @param {Object} options any other options the might be set
+   */
+  static(urlPath, directory, options) {
+    let route = this.route.bind(this);
+
+    let pathAsterix = `${urlPath}/*`;
+
+    class StaticHandler {
+
+      /**
+       * read a file from the file system; checks for mime type too
+       */
+      getFile(dir, _path) {
+        return new Promise((resolve, reject) => {
+          let fetch = path.join(dir, _path);
+          if (!path.isAbsolute(fetch)) {
+            fetch = path.join(process.cwd(), fetch);
+          }
+
+          fs.readFile(fetch, (err, content) => {
+            if (err) {
+              return reject(err);
+            }
+
+            let type = mime.lookup(fetch);
+            resolve({ type, content });
+          });
+        });
+      }
+
+      *get(ctx) {
+        try {
+          let pathSplit = ctx.pathname.split(urlPath);
+          let findFile = (pathSplit[1] === '/' || pathSplit[1] === '') ? '/index.html' : pathSplit[1];
+
+          let contents = yield this.getFile(directory, findFile);
+          return contents;
+        } catch (err) {
+          if (err.code === 'ENOENT') {
+            // 404
+            ctx.status(404);
+            return { type: 'text/plain', content: Buffer.from('file not found') };
+          } else {
+            ctx.status(500);
+            return { type: 'text/plain', content: Buffer.from('internal server error') };
+            console.error(err);
+          }
+        }
+      }
+    }
+
+    route(urlPath, StaticHandler);
+    route(pathAsterix, StaticHandler);
   }
 
   listen(port) {

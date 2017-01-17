@@ -11,15 +11,17 @@ const PORT = 3001;
 console.log(`example listening on port ${PORT}`);
 app.listen(PORT);
 
+app.static('/static', 'dir', {});
+
 app.route('/', class HomeHandler {
-    *get(ctx) {
-        let val = yield Promise.resolve({ status: 'yes' });
-        return val;
-    }
+  *get(ctx) {
+    let val = yield Promise.resolve({ status: 'yes' });
+    return val;
+  }
 });
 
 app.route('/:tool/:path', class ToolHandler {
-    *post(ctx) {
-        return ctx.params;
-    }
+  *post(ctx) {
+    return ctx.params;
+  }
 });
