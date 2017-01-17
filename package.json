@@ -1,6 +1,6 @@
 {
   "name": "leafless",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Just Another Simple Web Library",
   "main": "src/leafless.js",
   "scripts": {
