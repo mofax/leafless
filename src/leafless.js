@@ -71,7 +71,7 @@ module.exports = class LeafLess {
     }
 
     let ite;
-    if (('done' in passIn) && ('value' in passIn)) {
+    if ((typeof(passIn) === 'object') && (passIn.hasOwnProperty('done')) && (passIn.hasOwnProperty('value'))) {
       ite = passIn;
     } else {
       ite = iter.next(passIn);
