@@ -16,10 +16,18 @@ const staticHandler = require('./defaulthandlers/static');
 
 module.exports = (function () {
   let server = null;
+  let bodyParser = null;
 
   return class LeafLess {
     constructor() {
       this.instanceID = crypto.randomBytes(5).toString('hex');
+    }
+
+    addBodyParse(fn) {
+      if (!fn || !fn.call) {
+        throw new Error(`bodyparse must be a function`);
+      }
+      bodyParser = fn;
     }
 
     handle(request, response, routed, url) {
@@ -99,7 +107,13 @@ module.exports = (function () {
               content = JSON.parse(buf.toString());
               resolve(content);
             } catch (e) {
-              throw new Error('currently able to work with application/json');
+              throw new Error(`error parsing json`);
+            }
+          } else {
+            if (bodyParser !== null) {
+              return resolve(bodyParser.call(null, buf));
+            } else {
+              resolve(buf);
             }
           }
         });
