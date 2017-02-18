@@ -23,9 +23,9 @@ module.exports = (function () {
       this.instanceID = crypto.randomBytes(5).toString('hex');
     }
 
-    addBodyParse(fn) {
+    addBodyParser(fn) {
       if (!fn || !fn.call) {
-        throw new Error(`bodyparse must be a function`);
+        throw new Error(`bodyparser must be a function`);
       }
       bodyParser = fn;
     }
