@@ -34,10 +34,7 @@ module.exports = (function () {
       let context = this;
 
       let method = request.method.toLowerCase();
-      let requestID = crypto.randomBytes(20).toString('hex');
-      let handler = new routed.handler({
-        reqID: requestID
-      });
+      let handler = new routed.handler({});
 
       if (handler[method] == undefined) {
         // method not supported
