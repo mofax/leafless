@@ -76,7 +76,9 @@ module.exports = (function () {
           this.sendResponse(res, response);
         })
         .catch(error => {
+          // and error we don't know how to deal with
           console.error(error);
+          process.exit(1);
         });
     }
 
