@@ -1,10 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Raleway:300,400,700" rel="stylesheet">
+  <link href="prism.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Raleway', sans-serif;
+    }
+    
+    .docs {
+      width: 100%;
+      max-width: 700px;
+      margin: auto;
+      font-size: 1.2em;
+      font-weight: 300;
+    }
+    
+    h1{
+      color: rgb(120, 120, 120);
+    }
+    h2, h3 {
+      color: #2196F3;
+      font-weight: 400;
+      margin-top: 30px;
+    }
+    h2 {
+      font-size: 1.2em;
+    }
+    h3 {
+      font-size: 1em;
+      color: #6A1B9A;
+    }
+    pre {
+      border: 1px solid rgba(0,0,0,.2);
+      padding: 10px;
+      padding-left: 20px;
+      padding-bottom: 25px;
+    }
+    
+    code {
+      padding: 0;
+    }
+  </style>
   <title>Leafless Docs</title>
 </head>
+
 <body>
-  
+  <article class="docs" id="docs"></article>
+  <script src="prism.js"></script>
+  <script src="https://unpkg.com/marked@0.3.6/marked.min.js"></script>
+  <script src="https://unpkg.com/whatwg-fetch@2.0.2"></script>
+  <script>
+    fetch("/docs.md").then(res => {
+      return res.text();
+    }).then(text => {
+      let elem = document.getElementById('docs');
+      let mark = marked(text, {
+        highlight: function (code, lang) {
+          var extensions = {
+            js: 'javascript',
+            scss: 'css',
+            sass: 'css',
+            html: 'markup'
+          };
+
+          if (!Prism.languages.hasOwnProperty(lang)) {
+            // Default to markup if it's not in our extensions.
+            lang = extensions[lang] || 'markup';
+          }
+
+          return Prism.highlight(code, Prism.languages[lang]);
+        }
+      });
+      elem.innerHTML = mark;
+    }).catch(function (error) {
+      console.error(error);
+    })
+  </script>
 </body>
+
 </html>
