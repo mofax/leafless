@@ -85,10 +85,10 @@ yield or await this, to get the contents of the http body
 
  - otherwise, the raw `Buffer` is returned
 
-### ctx.status(`status:number`)
+### ctx.setStatus(`status:number`)
 set the Response http status
 
-### ctx.requestHeaders()
+### ctx.getRequestHeaders()
 returns the request headers
 
 ### ctx.setHeader(`key:string, value:string`)

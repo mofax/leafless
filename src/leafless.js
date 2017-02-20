@@ -48,7 +48,7 @@ module.exports = (function () {
         params: routed.params,
         query: url.query,
 
-        requestHeaders() {
+        getRequestHeaders() {
           return request.headers;
         },
 
@@ -56,7 +56,7 @@ module.exports = (function () {
           response.setHeader(key, value);
         },
 
-        status(num) {
+        setStatus(num) {
           if (typeof (num) !== 'number') {
             throw new Error('status code MUST be a number');
           }
