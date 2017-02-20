@@ -85,6 +85,27 @@ yield or await this, to get the contents of the http body
 
  - otherwise, the raw `Buffer` is returned
 
+### ctx.params
+contains url parameters
+eg.
+```js
+  class Handler {
+    *get(ctx) {
+      let { name, id } = ctx.params;
+      return `your name is ${name} and your id is ${id}`;
+    }
+  }
+
+  app.route('/:name/:id', Handler);
+```  
+
+### ctx.query
+contains the url query parameters
+eg.  
+if the requested url is `/?name=peter&id=1002`  
+`ctx.query -> {name: "peter", id: 1002 }`
+
+
 ### ctx.setStatus(`status:number`)
 set the Response http status
 
