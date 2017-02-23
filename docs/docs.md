@@ -66,6 +66,8 @@ set up https server by passing in an ssl object, that contains the key and certi
 ```
 leafless will automatically run on https, if the ssl option is passed in  
 
+<hr>
+
 ## app.route(`path:string, handler:class`)
 app.route sets up routing for your url paths  
  - **path** the first argument, can be `strings | string patterns | regular expressions`  
