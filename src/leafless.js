@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const url = require('url');
 const crypto = require('crypto');
@@ -19,7 +20,8 @@ module.exports = (function () {
   let bodyParser = null;
 
   return class LeafLess {
-    constructor() {
+    constructor(options = {}) {
+      this._options = options;
       this.instanceID = crypto.randomBytes(5).toString('hex');
     }
 
@@ -216,7 +218,11 @@ module.exports = (function () {
 
     listen(...args) {
       // set up a http server and pass in the listener
-      server = http.createServer(this.httpListener.bind(this));
+      if (this._options.ssl) {
+        server = https.createServer(this._options.ssl, this.httpListener.bind(this));
+      } else {
+        server = http.createServer(this.httpListener.bind(this));
+      }
 
       // log.info('starting up the server on port %s', HttpPort);
       server.listen(...args);

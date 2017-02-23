@@ -45,6 +45,27 @@ app.listen(3000)
 ```
 
 # Usage
+## Leafless instance
+you create a leafless instance by calling it's constructor, and providing the options
+```js
+  var Leafless = require('leafless');
+  var options = {}
+  var app = new Leafless(options);
+```
+### options
+#### ssl/tls
+
+set up https server by passing in an ssl object, that contains the key and certificate
+```js
+ let app = new Leafless({
+  ssl: {
+    key: fs.readFileSync('path_to_.key'),
+    cert: fs.readFileSync('path_to.cert')
+  }
+ })
+```
+leafless will automatically run on https, if the ssl option is passed in  
+
 ## app.route(`path:string, handler:class`)
 app.route sets up routing for your url paths  
  - **path** the first argument, can be `strings | string patterns | regular expressions`  
