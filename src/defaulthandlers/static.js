@@ -41,11 +41,11 @@ module.exports = function staticHandler(obj) {
       } catch (err) {
         if (err.code === 'ENOENT') {
           // 404
-          ctx.status(404);
+          ctx.setStatus(404);
           return { type: 'text/plain', content: Buffer.from('file not found') };
         } else {
           console.error(err);
-          ctx.status(500);
+          ctx.setStatus(500);
           return { type: 'text/plain', content: Buffer.from('internal server error') };
         }
       }
