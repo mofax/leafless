@@ -2,9 +2,8 @@
   "name": "leafless",
   "version": "0.0.8",
   "description": "Just Another Simple Web Library",
-  "main": "src/leafless.js",
+  "main": "_src/leafless.js",
   "scripts": {
-    "test": "mocha --reporter spec"
   },
   "repository": {
     "type": "git",

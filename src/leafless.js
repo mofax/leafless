@@ -1,231 +1,140 @@
-'use strict';
+// @flow
+"use strict";
+import type { IncomingMessage, ServerResponse } from "http";
 
-const http = require('http');
-const https = require('https');
-const fs = require('fs');
-const url = require('url');
-const crypto = require('crypto');
-let path = require('path');
+const http = require("http");
+const https = require("https");
+const fs = require("fs");
+const url = require("url");
+const path = require("path");
 
-const mime = require('./mime');
-const contentType = require('./tools/content-type');
-const routing = require('./routing');
-const tools = require('./tools');
-const co = require('./tools/co');
+const mime = require("./vendor/mime");
+const contentType = require("./vendor/parsers/content-type");
+const routing = require("./vendor/routing");
+const co = require("./vendor/co");
 
-const staticHandler = require('./defaulthandlers/static');
+const makectx = require("./lib/makectx");
+const staticHandler = require("./handlers/static");
 
-module.exports = (function () {
-  let server = null;
-  let bodyParser = null;
+/**
+ * send back an http response to the client
+ *
+ * @param {any} value - the item being sent back as response
+ * @param {Object} response - HTTPResponse object to which we are writing
+ */
+function sendResponse(value: any, response: ServerResponse) {
+  if (value == undefined) return response.end();
+  // did we get an object?
+  if (typeof value === "object") {
+    if (value.type && value.content) {
+      response.setHeader("Content-Type", value.type);
+      if (Buffer.isBuffer(value.content)) return response.end(value.content);
 
-  return class LeafLess {
-    constructor(options = {}) {
-      this._options = options;
-      this.instanceID = crypto.randomBytes(5).toString('hex');
+      return response.end(JSON.stringify(value.content));
     }
+    response.setHeader("Content-Type", "application/json");
+    response.end(JSON.stringify(value));
+    return;
+  }
+  // return as is
+  response.end(value);
+}
 
-    addBodyParser(fn) {
-      if (!fn || !fn.call) {
-        throw new Error(`bodyparser must be a function`);
+/**
+* httpListener is passed into http.createServer
+* @param {ClientRequest} request http.ServerRequest
+* @param {ServerResponse} response http.ServerResponse
+*/
+function httpListener(request: IncomingMessage, response: ServerResponse) {
+  const URL = url.parse(request.url);
+  let ctx, method: string, handler: Object, routed = routing.get(URL.pathname);
+
+  // check 404s
+  if (routed.handler == null) {
+    response.statusCode = 404;
+    return response.end("Not Found");
+  }
+  ctx = makectx(request, response, routed, URL);
+  method = request.method.toLowerCase();
+  handler = routed.handler;
+  if (typeof routed.handler === "function") handler = new routed.handler({});
+
+  // check 405 Method Not Supported
+  if (handler[method] == undefined) {
+    response.statusCode = 405;
+    return response.end("Method Not Supported");
+  }
+  co
+    .wrap(handler[method])
+    .call(handler, ctx)
+    .then(res => {
+      sendResponse(res, response);
+    })
+    .catch(error => {
+      // and error we don't know how to deal with
+      console.error(error);
+      process.exit(1);
+    });
+}
+
+// options.ssl
+function LeafLess(options: Object = {}) {
+  let instance = {};
+  instance.options = options;
+  instance.listen = function(...args) {
+    // set up a http server and pass in the listener
+    if (options.ssl) {
+      instance.server = https.createServer(
+        options.ssl,
+        httpListener.bind(instance)
+      );
+    } else {
+      instance.server = http.createServer(httpListener.bind(instance));
+    }
+    instance.server.listen(...args);
+    return instance.server;
+  };
+
+  /**
+   * route sets handlers of the given paths
+    route('/:tool/:path', {
+      *post(ctx) {
+        return ctx.params;
       }
-      bodyParser = fn;
-    }
+    });
 
-    handle(request, response, routed, url) {
-      let context = this;
+  * @param {string} path the url path being routed
+  * @param {Object} handler the route handler
+  */
+  instance.route = function(path: string, handler: Object) {
+    if (typeof path === "string") {
+      if (Array.isArray(handler)) throw new Error(`handler can't be an array`);
+      if (typeof handler === "function" || typeof handler === "object")
+        return routing.set(path, handler);
 
-      let method = request.method.toLowerCase();
-      let handler = new routed.handler({});
-
-      if (handler[method] == undefined) {
-        // method not supported
-        tools.httpError(405, request, response);
-        return void 0;
-      }
-
-      let ctxObject = {
-        href: url.href,
-        pathname: url.pathname,
-        params: routed.params,
-        query: url.query,
-
-        getRequestHeaders() {
-          return request.headers;
-        },
-
-        setHeader(key, value) {
-          response.setHeader(key, value);
-        },
-
-        setStatus(num) {
-          if (typeof (num) !== 'number') {
-            throw new Error('status code MUST be a number');
-          }
-          response.statusCode = num;
-        },
-
-        getBody() {
-          return context.readHTTPBody(request);
-        }
-      };
-
-      co.wrap(handler[method]).call(handler, ctxObject)
-        .then(res => {
-          this.sendResponse(res, response);
-        })
-        .catch(error => {
-          // and error we don't know how to deal with
-          console.error(error);
-          process.exit(1);
-        });
-    }
-
-    /**
-     * read the body of the http request
-     *
-     * @param {Object} request - The request object from which we are reading the body
-     */
-    readHTTPBody(request) {
-      return new Promise((resolve, reject) => {
-        let buf = null;
-
-        request.on('data', function (data) {
-          buf = buf === null ? data : buf + data;
-        });
-
-        request.on('end', () => {
-          if (buf === null) {
-            resolve(null);
-            return;
-          }
-
-          let parsedType = contentType.parse(request.headers['content-type']);
-
-          if (parsedType.type === 'application/json') {
-            let content = null;
-            try {
-              content = JSON.parse(buf.toString());
-              resolve(content);
-            } catch (e) {
-              throw new Error(`error parsing json`);
-            }
-          } else {
-            if (bodyParser !== null) {
-              return resolve(bodyParser.call(null, buf));
-            } else {
-              resolve(buf);
-            }
-          }
-        });
-      });
-    }
-
-    /**
-     * send back an http response to the client
-     *
-     * @param {any} value - the item being sent back as response
-     * @param {Object} response - HTTPResponse object to which we are writing
-     */
-    sendResponse(value, response) {
-      if (value == undefined) {
-        response.end();
-        return;
-      }
-
-      if (typeof (value) === 'object') {
-
-        if (value.type && value.content) {
-          response.setHeader('Content-Type', value.type);
-
-          if (Buffer.isBuffer(value.content)) {
-            response.end(value.content);
-            return;
-          }
-
-          response.end(JSON.stringify(value.content));
-          return;
-        }
-
-        response.setHeader('Content-Type', 'application/json');
-        response.end(JSON.stringify(value));
-        return;
-      }
-
-      response.end(value);
-    }
-
-    /**
-     * support serving static files
-     * 
-     * @param {string} path the url root to which to server static requests
-     * @param {string} directory the directory from which to server static files
-     * @param {Object} options any other options the might be set
-     */
-    static(urlPath, directory, options) {
-      let route = this.route.bind(this);
-      staticHandler({ route, urlPath, directory, options });
-    }
-
-    httpListener(request, response) {
-      let reqUrl = `http://${request.headers.host}${request.url}`;
-      let parseUrl = url.parse(reqUrl, true);
-      let pathname = parseUrl.pathname;
-      let routed = routing.get(pathname);
-
-      if (routed.handler === null) {
-        tools.httpError(404, request, response);
-        return void 0;
-      }
-
-      this.handle(request, response, routed, parseUrl);
-    }
-
-    /**
-     * set handlers of the given paths
-      app.route('/:tool/:path', class ToolHandler {
-        post(ctx) {
-          return ctx.params;
-        }
-      });
-    * @param {string} path - the url path being routed
-    * @param {Object} handler - the route handler
-    */
-    route(path, handler) {
-      if (typeof (path) === 'string') {
-        if (typeof (handler) !== 'function') {
-          throw new Error(`route is expecting handler to be a function found ${typeof (handler)}`);
-        }
-
-        routing.set(path, handler);
-        return;
-      }
-
-      // if the first argument is an object
-      // treat it like a key-value structure of path->handler
-      if (typeof (path) === 'object') {
-        for (let key of path) {
-          if (path.hasOwnProperty(key)) {
-            this.route(key, path[key]);
-          }
-        }
-      }
-    }
-
-    getServer() {
-      return server;
-    }
-
-    listen(...args) {
-      // set up a http server and pass in the listener
-      if (this._options.ssl) {
-        server = https.createServer(this._options.ssl, this.httpListener.bind(this));
-      } else {
-        server = http.createServer(this.httpListener.bind(this));
-      }
-
-      // log.info('starting up the server on port %s', HttpPort);
-      server.listen(...args);
+      throw new Error(
+        `route is expecting handler to be a function or object found '${typeof handler}'`
+      );
     }
   };
-})();
+
+  /**
+   * support serving static files
+   *
+   * @param {string} path the url root to which to server static requests
+   * @param {string} directory the directory from which to server static files
+   * @param {Object} options any other options the might be set
+   */
+  instance.static = function(
+    urlPath: string,
+    directory: string,
+    options: Object
+  ) {
+    let route = instance.route.bind(instance);
+    staticHandler({ route, urlPath, directory, options });
+  };
+
+  return instance;
+}
+
+module.exports = LeafLess;
