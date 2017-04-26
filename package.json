@@ -2,8 +2,9 @@
   "name": "leafless",
   "version": "0.0.8",
   "description": "Just Another Simple Web Library",
-  "main": "_src/leafless.js",
+  "main": "lib/leafless.js",
   "scripts": {
+    "types": "flow-remove-types --out-dir lib/ src/"
   },
   "repository": {
     "type": "git",
@@ -15,6 +16,7 @@
   "bugs": {
     "url": "https://github.com/mofax/leafless/issues"
   },
+  "files": ["lib"],
   "homepage": "https://github.com/mofax/leafless#readme",
   "dependencies": {},
   "devDependencies": {
