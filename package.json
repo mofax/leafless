@@ -4,7 +4,8 @@
   "description": "Just Another Simple Web Library",
   "main": "lib/leafless.js",
   "scripts": {
-    "types": "flow-remove-types --out-dir lib/ src/"
+    "types": "flow-remove-types --out-dir lib/ src/",
+    "commit": "npm run types && git add . && git commit -m 'build'"
   },
   "repository": {
     "type": "git",
