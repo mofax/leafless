@@ -2,7 +2,7 @@
 
 "use strict";
 
-let ll = require("..");
+let ll = require("../src/leafless");
 
 let app = new ll();
 
@@ -11,15 +11,18 @@ const PORT = 3001;
 console.log(`example listening on port ${PORT}`);
 app.listen(PORT);
 
-app.route(
-  "/",
-  class HomeHandler {
-    *get(ctx) {
-      let val = yield Promise.resolve({ status: "yes" });
-      return val;
-    }
-  }
-);
+app.static("/", "static", {});
+// app.static("/static", "static", {});
+
+// app.route(
+//   "/",
+//   class HomeHandler {
+//     *get(ctx) {
+//       let val = yield Promise.resolve({ status: "yes" });
+//       return val;
+//     }
+//   }
+// );
 
 app.route("/:tool/:path", {
   *post(ctx) {
