@@ -25,7 +25,8 @@ module.exports = function makectx(
   let ctx = {
     host: request.headers.host,
     url: request.url,
-    params: routed.params,
+    pathname: URL.pathname,
+    params: routed.params || {},
     query: querystring.parse(URL.query),
 
     getRequestHeaders() {
