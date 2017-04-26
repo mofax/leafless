@@ -1,6 +1,6 @@
 {
   "name": "leafless",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Just Another Simple Web Library",
   "main": "lib/leafless.js",
   "scripts": {
@@ -17,7 +17,9 @@
   "bugs": {
     "url": "https://github.com/mofax/leafless/issues"
   },
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "homepage": "https://github.com/mofax/leafless#readme",
   "dependencies": {},
   "devDependencies": {
