@@ -17,30 +17,6 @@ const makectx = require("./lib/makectx");
 const staticHandler = require("./handlers/static");
 
 /**
- * send back an http response to the client
- *
- * @param {any} value - the item being sent back as response
- * @param {Object} response - HTTPResponse object to which we are writing
- */
-function sendResponse(value: any, response: ServerResponse) {
-  if (value == undefined) return response.end();
-  // did we get an object?
-  if (typeof value === "object") {
-    if (value.type && value.content) {
-      response.setHeader("Content-Type", value.type);
-      if (Buffer.isBuffer(value.content)) return response.end(value.content);
-
-      return response.end(JSON.stringify(value.content));
-    }
-    response.setHeader("Content-Type", "application/json");
-    response.end(JSON.stringify(value));
-    return;
-  }
-  // return as is
-  response.end(value);
-}
-
-/**
 * httpListener is passed into http.createServer
 * @param {ClientRequest} request http.ServerRequest
 * @param {ServerResponse} response http.ServerResponse
@@ -64,17 +40,11 @@ function httpListener(request: IncomingMessage, response: ServerResponse) {
     response.statusCode = 405;
     return response.end("Method Not Supported");
   }
-  co
-    .wrap(handler[method])
-    .call(handler, ctx)
-    .then(res => {
-      sendResponse(res, response);
-    })
-    .catch(error => {
-      // and error we don't know how to deal with
-      console.error(error);
-      process.exit(1);
-    });
+  co.wrap(handler[method]).call(handler, ctx).then(res => {}).catch(error => {
+    // and error we don't know how to deal with
+    console.error(error);
+    process.exit(1);
+  });
 }
 
 // options.ssl

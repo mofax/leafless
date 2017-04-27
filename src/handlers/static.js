@@ -39,16 +39,16 @@ module.exports = function staticHandler(obj) {
           : pathSplit[1];
 
         let contents = yield this.getFile(directory, findFile);
-        return contents;
+        ctx.end(contents);
       } catch (err) {
         if (err.code === "ENOENT") {
           // 404
-          ctx.setStatus(404);
-          return "file not found";
+          ctx.response.setStatus(404);
+          ctx.end("file not found");
         } else {
           console.error(err);
-          ctx.setStatus(500);
-          return "internal server error";
+          ctx.response.setStatus(500);
+          ctx.end("internal server error");
         }
       }
     }
