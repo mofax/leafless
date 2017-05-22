@@ -1,30 +1,24 @@
 {
   "name": "leafless",
-  "version": "0.0.10",
-  "description": "Just Another Simple Web Library",
-  "main": "lib/leafless.js",
-  "scripts": {
-    "types": "flow-remove-types --out-dir lib/ src/",
-    "commit": "npm run types && git add . && git commit -m 'build'"
+  "version": "0.1.0",
+  "main": "src/index.js",
+  "author": {
+    "name": "Alloys Mila",
+    "email": "mila.alloys@gmail.com"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mofax/leafless.git"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "mime": "^1.3.6",
+    "parseurl": "^1.3.1",
+    "path-to-regexp": "^1.7.0",
+    "send": "^0.15.3"
   },
-  "keywords": [],
-  "author": "Alloys Mila <mila.alloys@gmail.com>",
-  "license": "Apache 2.0",
-  "bugs": {
-    "url": "https://github.com/mofax/leafless/issues"
+  "engines": {
+    "node": "^7.6.0"
   },
-  "files": [
-    "lib"
-  ],
-  "homepage": "https://github.com/mofax/leafless#readme",
-  "dependencies": {},
   "devDependencies": {
-    "chai": "^3.5.0",
-    "eslint": "^3.6.0",
-    "mocha": "^2.5.3"
+    "expect": "^1.20.2",
+    "jest": "^20.0.3",
+    "nodemon": "^1.11.0"
   }
 }

@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-let pRegex = require('./pathtoregexp');
+let pRegex = require("path-to-regexp");
 let objectList = [];
 let homeHandler;
 
@@ -27,11 +27,11 @@ function routeObject(exp, keys, handler) {
 
 let routing = {
   set(path, handler) {
-    if (typeof (path) !== 'string') {
-      throw new TypeError('expecting path to be a string');
+    if (typeof path !== "string") {
+      throw new TypeError("expecting path to be a string");
     }
 
-    if (path === '/' || path === '') {
+    if (path === "/" || path === "") {
       // home
       homeHandler = handler;
       return;
@@ -44,11 +44,11 @@ let routing = {
   },
 
   get(path) {
-    if (typeof (path) !== 'string') {
-      throw new TypeError('expecting path to be a string');
+    if (typeof path !== "string") {
+      throw new TypeError("expecting path to be a string");
     }
 
-    if (path === '/' || path === '') {
+    if (path === "/" || path === "") {
       if (homeHandler) {
         return {
           handler: homeHandler

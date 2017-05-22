@@ -1,71 +1,59 @@
-# leafless
-LeafLess is a lite Web Framework, with built in generator coroutines for easy async in your routes
+Leafless
+========
 
-### Installation
-`npm install --save leafless`
+Leafless is a tiny async-await ready web library for [NodeJS](https://nodejs.org)  
 
-### Stability
-Still unstable, very unstable.
+## Installation
+```bash
+$ yarn add leafless
+```
 
-### Quick Usage
+## Usage: Hello World
 ```javascript
-// require leafless
-let LL = require('leafless');
-
-// create a new leafless instance
+let LL = require("leafless");
 let app = new LL();
 
-// create your route handlers
+// hello world [GET]
+app.route("/hello", {
+  async get(ctx) {
+    ctx.response.text("Hello World");
+  }
+})
 
-//the home handler
-app.route('/', class HomeHandler {
-    // the http methods should be generator functions, or a function that returns an iterable
-    *get(ctx) {
-        return 'Hello World'
+/** a POST request to /hello returns a 405 */
+
+// allow both POST and GET requests
+app.route("/hello2", {
+  async get(ctx) {
+    ctx.response.text("Hello World");
+  }
+
+  // ContentType application/json
+  async post(ctx) {
+    ctx.response.json({ data:"Hello World"});
+  }
+})
+
+// read http request body
+app.route("/data", {
+  async post(ctx) {
+    // read request body as json
+    let body = await ctx.request.json();
+    if (!body.code) {
+      ctx.response.status(400);
+      ctx.response.json({error: "body must have code!"});
+      return;
     }
-});
+    ctx.response.json({data: "everything is cool"});
+  }
+})
 
-// posts handler
-class PostsHandler {
-    // fetch post with given id
-    *get(ctx) {
-        
-        try {
-            let id = ctx.params.id
-            if (id !== undefined) {
-                // the function getPostFromDB returns a Promise
-                let post = yield getPostFromDB(id);
+// serve a file from the filesystem as response
+app.route("/data", {
+  async post(ctx) {
+    ctx.response.sendFile("/absolute/path/to/file");
+  }
+})
 
-                return { // will be sent to client as application/json
-                    title: post.title,
-                    body: post.body
-                }
-            } else {
-                let posts = yield getAllPostsFromDB()
-                return posts;
-            }
-        } catch (e) {
-            return { error: 'oops! something happened'}
-        }
-    
-    // save post with given id to db
-    *post(ctx) { 
-        // get the http POST body
-        let post = yield ctx.getBody();
-        
-        // yielding promises makes it easy to write async code
-        let sanitizedPost = yield sanitizePost(post);
-        let saved = yield savePosttoDB(sanitizedPost);
-        
-        return {
-            postId = saved.id;
-        }
-    }
-}
-
-app.route('/posts', PostsHandler);
-app.route('/posts/:id', PostsHandler);
-
-// start the server
-app.listen(3000);
+app.listen(8000); // listen and serve
 ```

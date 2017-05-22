@@ -1,29 +1,20 @@
-// @flow
 "use strict";
-import type { IncomingMessage, ServerResponse } from "http";
 
 const http = require("http");
 const https = require("https");
-const fs = require("fs");
-const url = require("url");
-const path = require("path");
-
-const mime = require("./vendor/mime");
-const contentType = require("./vendor/parsers/content-type");
-const routing = require("./vendor/routing");
-const co = require("./vendor/co");
-
-const makectx = require("./lib/makectx");
-const staticHandler = require("./handlers/static");
+const parseurl = require("parseurl");
+const routing = require("./routing");
+const makectx = require("./makectx");
 
 /**
 * httpListener is passed into http.createServer
 * @param {ClientRequest} request http.ServerRequest
 * @param {ServerResponse} response http.ServerResponse
 */
-function httpListener(request: IncomingMessage, response: ServerResponse) {
-  const URL = url.parse(request.url);
-  let ctx, method: string, handler: Object, routed = routing.get(URL.pathname);
+function httpListener(request, response) {
+
+  const URL = parseurl(request);
+  let ctx, method, handler, routed = routing.get(URL.pathname);
 
   // check 404s
   if (routed.handler == null) {
@@ -40,17 +31,20 @@ function httpListener(request: IncomingMessage, response: ServerResponse) {
     response.statusCode = 405;
     return response.end("Method Not Supported");
   }
-  co.wrap(handler[method]).call(handler, ctx).then(res => {}).catch(error => {
+  handler[method].call(handler, ctx).then(res => {}).catch(error => {
     // and error we don't know how to deal with
     console.error(error);
     process.exit(1);
   });
 }
 
-// options.ssl
-function LeafLess(options: Object = {}) {
-  let instance = {};
+function LeafLess(options = {}) {
+  let instance;
+  if (!(this instanceof LeafLess)) return new LeafLess(options);
+  instance = this;
+
   instance.options = options;
+
   instance.listen = function(...args) {
     // set up a http server and pass in the listener
     if (options.ssl) {
@@ -76,7 +70,7 @@ function LeafLess(options: Object = {}) {
   * @param {string} path the url path being routed
   * @param {Object} handler the route handler
   */
-  instance.route = function(path: string, handler: Object) {
+  instance.route = function(path, handler) {
     if (typeof path === "string") {
       if (Array.isArray(handler)) throw new Error(`handler can't be an array`);
       if (typeof handler === "function" || typeof handler === "object")
@@ -86,22 +80,6 @@ function LeafLess(options: Object = {}) {
         `route is expecting handler to be a function or object found '${typeof handler}'`
       );
     }
-  };
-
-  /**
-   * support serving static files
-   *
-   * @param {string} path the url root to which to server static requests
-   * @param {string} directory the directory from which to server static files
-   * @param {Object} options any other options the might be set
-   */
-  instance.static = function(
-    urlPath: string,
-    directory: string,
-    options: Object
-  ) {
-    let route = instance.route.bind(instance);
-    staticHandler({ route, urlPath, directory, options });
   };
 
   return instance;
