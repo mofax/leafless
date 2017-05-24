@@ -14,6 +14,7 @@ module.exports = function makectx(request, response, routed, URL) {
     _res: response,
     host: request.headers.host,
     url: request.url,
+    parsedUrl: URL,
     params: routed.params,
     query: querystring.parse(URL.query),
 
