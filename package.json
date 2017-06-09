@@ -1,6 +1,6 @@
 {
   "name": "leafless",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "src/index.js",
   "author": "Alloys Mila <mila.alloys@gmail.com>",
   "license": "Apache-2.0",
