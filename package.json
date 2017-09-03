@@ -1,8 +1,8 @@
 {
   "name": "leafless",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "main": "dist/index.js",
-  "types":"dist/index.d.ts",
+  "types": "dist/index.d.ts",
   "author": "Alloys Mila <mila.alloys@gmail.com>",
   "license": "Apache-2.0",
   "dependencies": {
