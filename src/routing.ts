@@ -1,18 +1,44 @@
 "use strict";
 
-let pRegex = require("path-to-regexp");
-let objectList = [];
-let homeHandler;
+import * as pRegex from "path-to-regexp";
+import { CTX } from "./makectx";
 
-function routeObject(exp, keys, handler) {
+export type HandlerHTTPMethod = (ctx: CTX) => Promise<any>;
+
+export type MatchObject = {
+  params: any;
+  handler: Handler;
+};
+
+export type RouteObject = {
+  match: (str: string) => MatchObject;
+};
+
+export type Handler = {
+  [key: string]: any;
+  get?: HandlerHTTPMethod;
+  post?: HandlerHTTPMethod;
+  put?: HandlerHTTPMethod;
+  delete?: HandlerHTTPMethod;
+  options?: HandlerHTTPMethod;
+};
+
+let objectList: RouteObject[] = [];
+let homeHandler: Handler;
+
+function routeObject(
+  exp: pRegex.PathRegExp,
+  keys: pRegex.Key[],
+  handler: Handler
+) {
   return {
-    match(str) {
+    match(str: string) {
       let test = exp.exec(str);
       if (!test) {
         return null;
       }
 
-      let params = {};
+      let params: { [key: string]: any } = {};
       for (let i = 0; i < keys.length; i++) {
         params[keys[i].name] = test[i + 1];
       }
@@ -26,7 +52,7 @@ function routeObject(exp, keys, handler) {
 }
 
 let routing = {
-  set(path, handler) {
+  set(path: string, handler: Handler) {
     if (typeof path !== "string") {
       throw new TypeError("expecting path to be a string");
     }
@@ -37,13 +63,13 @@ let routing = {
       return;
     }
 
-    let keys = [];
+    let keys: any[] = [];
     let re = pRegex(path, keys);
     // append to object list
     objectList[objectList.length] = routeObject(re, keys, handler);
   },
 
-  get(path) {
+  get(path: string) {
     if (typeof path !== "string") {
       throw new TypeError("expecting path to be a string");
     }
@@ -60,7 +86,7 @@ let routing = {
     for (let i = 0; i < objectList.length; i++) {
       let obj = objectList[i];
       let match = obj.match(path);
-      if (match) {
+      if (match != undefined) {
         return match;
       }
     }
@@ -70,4 +96,4 @@ let routing = {
   }
 };
 
-module.exports = routing;
+export { routing };

@@ -1,13 +1,20 @@
 "use strict";
 
 let path = require("path");
-let LL = require("..");
+let LL = require("..").default;
 
 let app = new LL();
 
 app.route("/hello", {
   async get(ctx) {
     ctx.response.json({ hello: "world" });
+  }
+});
+
+app.route("/:look/:past", {
+  async get(ctx) {
+    let { params, query } = ctx;
+    ctx.response.json({ params, query });
   }
 });
 
