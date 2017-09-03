@@ -1,20 +1,25 @@
 "use strict";
 
-const http = require("http");
-const https = require("https");
-const parseurl = require("parseurl");
-const routing = require("./routing");
-const makectx = require("./makectx");
+import * as http from "http";
+import * as https from "https";
+import * as parseurl from "parseurl";
+import { Handler, routing } from "./routing";
+import { CTX, makectx } from "./makectx";
 
 /**
 * httpListener is passed into http.createServer
-* @param {ClientRequest} request http.ServerRequest
+* @param {IncomingMessage} request http.ServerRequest
 * @param {ServerResponse} response http.ServerResponse
 */
-function httpListener(request, response) {
-
+function httpListener(
+  request: http.IncomingMessage,
+  response: http.ServerResponse
+) {
   const URL = parseurl(request);
-  let ctx, method, handler, routed = routing.get(URL.pathname);
+  let ctx: CTX,
+    method: string,
+    handler: Handler,
+    routed = routing.get(URL.pathname);
 
   // check 404s
   if (routed.handler == null) {
@@ -24,28 +29,33 @@ function httpListener(request, response) {
   ctx = makectx(request, response, routed, URL);
   method = request.method.toLowerCase();
   handler = routed.handler;
-  if (typeof routed.handler === "function") handler = new routed.handler({});
 
   // check 405 Method Not Supported
   if (handler[method] == undefined) {
     response.statusCode = 405;
     return response.end("Method Not Supported");
   }
-  handler[method].call(handler, ctx).then(res => {}).catch(error => {
-    // and error we don't know how to deal with
-    console.error(error);
-    process.exit(1);
-  });
+  handler[method]
+    .call(handler, ctx)
+    .then(() => {})
+    .catch((error: Error) => {
+      // an error we don't know how to deal with
+      console.error(error);
+      process.exit(1);
+    });
 }
 
-function LeafLess(options = {}) {
-  let instance;
-  if (!(this instanceof LeafLess)) return new LeafLess(options);
-  instance = this;
+class LeafLess {
+  options: any;
+  server: http.Server | https.Server;
+  constructor(options = {}) {
+    this.options = options;
+  }
 
-  instance.options = options;
+  listen(...args: any[]) {
+    let options = this.options,
+      instance = this;
 
-  instance.listen = function(...args) {
     // set up a http server and pass in the listener
     if (options.ssl) {
       instance.server = https.createServer(
@@ -57,12 +67,12 @@ function LeafLess(options = {}) {
     }
     instance.server.listen(...args);
     return instance.server;
-  };
+  }
 
   /**
    * route sets handlers of the given paths
     route('/:tool/:path', {
-      *post(ctx) {
+      async post(ctx) {
         return ctx.params;
       }
     });
@@ -70,19 +80,16 @@ function LeafLess(options = {}) {
   * @param {string} path the url path being routed
   * @param {Object} handler the route handler
   */
-  instance.route = function(path, handler) {
+  route(path: string, handler: Handler) {
     if (typeof path === "string") {
       if (Array.isArray(handler)) throw new Error(`handler can't be an array`);
-      if (typeof handler === "function" || typeof handler === "object")
-        return routing.set(path, handler);
+      if (typeof handler === "object") return routing.set(path, handler);
 
       throw new Error(
-        `route is expecting handler to be a function or object found '${typeof handler}'`
+        `route is expecting handler to be of handler type found '${typeof handler}'`
       );
     }
-  };
-
-  return instance;
+  }
 }
 
-module.exports = LeafLess;
+export default LeafLess;

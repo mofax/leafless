@@ -1,7 +1,7 @@
 Leafless
 ========
 
-Leafless is a tiny async-await ready web library for [NodeJS](https://nodejs.org)  
+Leafless is a tiny async-await http library for [NodeJS](https://nodejs.org)  
 
 ## Installation
 ```bash
