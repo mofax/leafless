@@ -28,9 +28,9 @@ export type CTX = {
     setHeader: (key: string, value: string) => void;
     status: (num: number) => void;
     sendFile: (path: string) => void;
-    text: () => void;
-    json: () => void;
-    buffer: () => void;
+    text: (item: string | Buffer) => void;
+    json: (item: any[] | { [key: string]: any }) => void;
+    buffer: (item: string | Buffer) => void;
   };
 };
 
