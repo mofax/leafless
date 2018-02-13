@@ -18,13 +18,13 @@ export type CTX = {
   params: any;
   query: any;
 
-  request?: {
+  request: {
     headers: () => IncomingHttpHeaders;
     text: () => void;
     json: () => void;
     buffer: () => void;
   };
-  response?: {
+  response: {
     setHeader: (key: string, value: string) => void;
     status: (num: number) => void;
     sendFile: (path: string) => void;
@@ -39,8 +39,8 @@ export function makectx(
   response: ServerResponse,
   routed: any,
   URL: any
-) {
-  let ctx: CTX = {
+): CTX {
+  let ctx: any = {
     _req: request,
     _res: response,
     host: request.headers.host,
@@ -56,18 +56,18 @@ export function makectx(
     return request.headers;
   };
 
-  ctx.response.setHeader = (key, value) => {
+  ctx.response.setHeader = (key: string, value: string) => {
     response.setHeader(key, value);
   };
 
-  ctx.response.status = num => {
+  ctx.response.status = (num: number) => {
     if (typeof num !== "number") {
       throw new Error("status code MUST be a number");
     }
     response.statusCode = num;
   };
 
-  ctx.response.sendFile = path => {
+  ctx.response.sendFile = (path: string) => {
     streamFile(path, response);
   };
 
