@@ -3,14 +3,15 @@
 import * as http from "http";
 import * as https from "https";
 import * as parseurl from "parseurl";
+import stoppable from "./stoppable";
 import { Handler, routing } from "./routing";
 import { CTX, makectx } from "./makectx";
 
 /**
-* httpListener is passed into http.createServer
-* @param {IncomingMessage} request http.ServerRequest
-* @param {ServerResponse} response http.ServerResponse
-*/
+ * httpListener is passed into http.createServer
+ * @param {IncomingMessage} request http.ServerRequest
+ * @param {ServerResponse} response http.ServerResponse
+ */
 function httpListener(
   request: http.IncomingMessage,
   response: http.ServerResponse
@@ -58,14 +59,15 @@ class LeafLess {
 
     // set up a http server and pass in the listener
     if (options.ssl) {
-      instance.server = https.createServer(
-        options.ssl,
-        httpListener.bind(instance)
-      );
+      let server = https.createServer(options.ssl, httpListener.bind(instance));
+      let st = stoppable(server);
+      instance.server = st;
     } else {
-      instance.server = http.createServer(httpListener.bind(instance));
+      instance.server = stoppable(
+        http.createServer(httpListener.bind(instance))
+      );
     }
-    instance.server.listen(...args);
+    instance.server = instance.server.listen(...args);
     return instance.server;
   }
 
