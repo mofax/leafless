@@ -20,9 +20,9 @@ export type CTX = {
 
   request: {
     headers: () => IncomingHttpHeaders;
-    text: () => void;
-    json: () => void;
-    buffer: () => void;
+    text: () => Promise<string>;
+    json: () => Promise<{ [key: string]: any }>;
+    buffer: () => Promise<Buffer>;
   };
   response: {
     setHeader: (key: string, value: string) => void;
