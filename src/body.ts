@@ -32,11 +32,13 @@ function wait(req: IncomingMessage): Promise<Buffer> {
 export function request(ctx: any, req: IncomingMessage) {
   ctx.json = async function json() {
     let data = await wait(req);
+    if (!data) throw new Error("no data was sent in the http body");
     return JSON.parse(data.toString());
   };
 
   ctx.text = async function text() {
     let data = await wait(req);
+    if (!data) throw new Error("no data was sent in the http body");
     return data.toString();
   };
 
